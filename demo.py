@@ -326,7 +326,7 @@ for i in range(len(path_poly) - 1):
     pass_diagnals.append(poly_diag_map[str(path_poly[i])+"_"+str(path_poly[i + 1])])
 
 
-#get the pass diagnals (Funnel Algorithm)
+#Funnel Algorithm to find final path (todo )
 
 
 
