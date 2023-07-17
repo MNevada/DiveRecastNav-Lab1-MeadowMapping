@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utils.MinBinaryHeap import MinBinaryHeap
 
 from meadow_map.basic_ops import left_on
+from meadow_map.basic_ops import left
 
 
 def plot_poly(verts: np.ndarray, indices: np.ndarray, color="blue") -> None:
@@ -102,7 +103,6 @@ plt.plot(
 )
 
 
-
 # get the center pos of poly
 def getCenterPos(verts, verts_indices):
     sumx = 0
@@ -124,8 +124,25 @@ for i in range(len(polys)):
     # plt.scatter(centX, centY)
 
 # search the path
-startPos = [1., 3.5]
-endPos = [3.5, 1.2]
+# example 1
+# startPos = [1., 3.5]
+# endPos = [0.5, 3.0]
+
+# example 2
+# startPos = [0.1, 1.5]
+# endPos = [3.5, 1.2]
+
+#example 3
+# startPos = [0.1, 1.5]
+# endPos = [1, 3.5]
+
+#example 4
+# startPos = [0.1, 1.5]
+# endPos = [1, 3.]
+
+#example 5
+endPos = [1, 3.5]
+startPos = [3.6, 1.2]
 
 plt.scatter(startPos[0], startPos[1])
 plt.scatter(endPos[0], endPos[1])
@@ -223,8 +240,11 @@ for poly_indice in indices_res_polys:
         if endPolyIndice == 0 and endFlag:
             endPolyIndice = poly_indice
 
+# if start pos and end pos in the same polygon,return the path
+# if startPolyIndice == endPolyIndice:
+#     return [startPos,endPos]
 
-# construct path
+# construct path (pass polygon numbers)
 def constructPath(predecessors, start, goal):
     path_polys = []
     current_poly = goal
@@ -232,6 +252,7 @@ def constructPath(predecessors, start, goal):
         path_polys.insert(0, current_poly)
         current_poly = predecessors[current_poly]
     return path_polys
+
 
 # overloading the compare function of binaryheap
 def custom_compare(node1, node2):
@@ -249,11 +270,12 @@ def insert(self, value):
     self.value_index_map[value['polyIndice']] = value
     self._percolate_up(index)
 
-#A* algorithm
+
+# A* algorithm
 def findPassPolys(poly_neighbour, startPoly, endPoly):
     """
     Return the pass polygon indices between start polygon and end polygon.
-    :param poly_neighbour   dictionary  all the polys and thier neighbours
+    :param poly_neighbour   dictionary  all the polys and their neighbours
     :param startPoly:       int         the index of start polygon
     :param endPoly:         int         the index of end polygon
     :return:                list        a list of the pass polygon indices between start polygon and end polygon.
@@ -311,24 +333,114 @@ def findPassPolys(poly_neighbour, startPoly, endPoly):
 path_poly = findPassPolys(poly_neighbour, startPolyIndice, endPolyIndice)
 
 # show the path of polys
-for i in range(len(path_poly) - 1):
-    center = center_of_polys[path_poly[i]]
-    next_center = center_of_polys[path_poly[i + 1]]
-    plt.plot(
-        [center[0], next_center[0]],
-        [center[1], next_center[1]],
-        "--", c='green'
-    )
-
+# for i in range(len(path_poly) - 1):
+#     center = center_of_polys[path_poly[i]]
+#     next_center = center_of_polys[path_poly[i + 1]]
+#     plt.plot(
+#         [center[0], next_center[0]],
+#         [center[1], next_center[1]],
+#         "--", c='green'
+#     )
 
 pass_diagnals = []
 for i in range(len(path_poly) - 1):
-    pass_diagnals.append(poly_diag_map[str(path_poly[i])+"_"+str(path_poly[i + 1])])
+    diag_num = poly_diag_map[str(path_poly[i]) + "_" + str(path_poly[i + 1])]
+    center = center_of_polys[path_poly[i]]
+    # Based on looking towards the next crossed diagonal from each triangle’s centroid,
+    # determine the left and right of the endpoints.
+    info = {
+        'diag_num': diag_num,
+    }
+    diagPos = diagsAll[diag_num]
+    if left_on(center, verts[diagPos[0]], verts[diagPos[1]]):
+        info['left'] = verts[diagPos[1]]
+        info['right'] = verts[diagPos[0]]
+    else:
+        info['left'] = verts[diagPos[0]]
+        info['right'] = verts[diagPos[1]]
+    pass_diagnals.append(info)
+
+#Treating the endpoint as an edge, with the same left and right vertices
+pass_diagnals.append({
+    'left':endPos,
+    'right':endPos,
+})
+
+# Funnel Algorithm to find final path (todo )
+apex = startPos  # representing the starting point
+# define the left and right boundry of funnel
+firstDiagInfo = pass_diagnals[0]
+lastLeft, lastRight = firstDiagInfo['left'], firstDiagInfo['right']
+passing_point = []
+passing_point.append(startPos)
 
 
-#Funnel Algorithm to find final path (todo )
+# check if the same point
+def checkIfTheSamePoint(posA, posB):
+    return posA[0] == posB[0] and posA[1] == posB[1]
 
 
+
+
+lenPassDiagnals = len(pass_diagnals)
+for i in range(lenPassDiagnals):
+    if i > 0:
+        diag_info = pass_diagnals[i]
+        leftPoint = diag_info['left']
+        rightPoint = diag_info['right']
+
+        leftFlag = True
+        rightFlag = True
+
+        while leftFlag or rightFlag:
+            # left
+            leftFlag = False
+            rightFlag = False
+            if not checkIfTheSamePoint(leftPoint, lastLeft):
+                if checkIfTheSamePoint(lastLeft, apex):
+                    lastLeft = leftPoint
+                else:
+                    if i == lenPassDiagnals - 1:
+                        if not left_on(apex, lastRight, leftPoint):
+                            apex = lastRight
+                            passing_point.append(apex)
+                    else:
+                        if not left(apex, lastLeft, leftPoint):
+                            if left_on(apex, lastRight, leftPoint):
+                                lastLeft = leftPoint
+                            else:
+                                apex = lastRight
+                                passing_point.append(apex)
+                                leftFlag = True
+            # right
+            if not leftFlag and not checkIfTheSamePoint(rightPoint, lastRight):
+                if checkIfTheSamePoint(lastRight,apex):
+                    lastRight = rightPoint
+                else:
+                    if i == lenPassDiagnals - 1:
+                        if left(apex, lastLeft, rightPoint):
+                            apex = lastLeft
+                            passing_point.append(apex)
+                    else:
+                        if left_on(apex, lastRight, rightPoint):
+                            if not left(apex, lastLeft, rightPoint):
+                                lastRight = rightPoint
+                            else:
+                                apex = lastLeft
+                                passing_point.append(apex)
+                                rightFlag = True
+
+
+passing_point.append(endPos)
+# show the final path
+for i in range(len(passing_point) - 1):
+    posA = passing_point[i]
+    next_posA = passing_point[i + 1]
+    plt.plot(
+        [posA[0], next_posA[0]],
+        [posA[1], next_posA[1]],
+        "-", c='red'
+    )
 
 plt.grid()
 plt.title("Convexify with holes")
