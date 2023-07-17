@@ -14,7 +14,7 @@ An python implementation of *Path planning for a vision-based autonomous robot*,
 ## Setup the environment
 
 1. Python3
-2. run `python.exe -m pip install -r .\requirement.txt` to install required packages
+2. run `python.exe -m pip install -r .\requirements.txt` to install required packages
 
 ## Recast vs Lab1 Implementation
 
