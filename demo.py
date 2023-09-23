@@ -5,6 +5,7 @@ from utils.MinBinaryHeap import MinBinaryHeap
 
 from meadow_map.basic_ops import left_on
 from meadow_map.basic_ops import left
+import json
 
 
 def plot_poly(verts: np.ndarray, indices: np.ndarray, color="blue") -> None:
@@ -40,20 +41,13 @@ indices_poly = [verts_poly.shape[0] - i - 1 for i in range(verts_poly.shape[0])]
 verts_hole = np.array(
     [
         [0.5, 0.5], [0.2, 1.5], [0.4, 2.],
-        [1.8, 0.5]
-    ]
-)
-
-verts_hole = np.array(
-    [
-        [0.5, 0.5], [0.2, 1.5], [0.4, 2.],
-        [1.8, 0.5]
+        [1.8, 0.5], [1., 1.]
     ]
 )
 
 verts_hole1 = np.array(
     [
-        [2.5, 1.], [3., 2], [3.5, 1]
+        [2.5, 1.], [3., 2], [3., 1.5], [3.5, 1]
     ]
 )
 indices_hole = [(i + 2) % verts_hole.shape[0] for i in range(verts_hole.shape[0])]  # CW
@@ -65,8 +59,7 @@ verts, indices, mergeLineSeg2 = meadow_map.merge_hole(verts, indices, verts_hole
 polys, diags = meadow_map.convexify(verts, indices)
 
 # plot all diags. with dotted line
-diagsAll = []
-diagsAll.append([mergeLineSeg1[0], mergeLineSeg1[1]])
+diagsAll = [[mergeLineSeg1[0], mergeLineSeg1[1]]]
 for d in diags:
     posA = verts[indices[d[0]]]
     posB = verts[indices[d[1]]]
@@ -129,20 +122,21 @@ for i in range(len(polys)):
 # endPos = [0.5, 3.0]
 
 # example 2
+startPos = [1, 3.5]
+endPos = [3.6, 1.2]
+
+# example 3
 # startPos = [0.1, 1.5]
 # endPos = [3.5, 1.2]
 
-#example 3
+# example 4
 # startPos = [0.1, 1.5]
 # endPos = [1, 3.5]
 
-#example 4
+# example 5
 # startPos = [0.1, 1.5]
 # endPos = [1, 3.]
 
-#example 5
-endPos = [1, 3.5]
-startPos = [3.6, 1.2]
 
 plt.scatter(startPos[0], startPos[1])
 plt.scatter(endPos[0], endPos[1])
@@ -240,30 +234,20 @@ for poly_indice in indices_res_polys:
         if endPolyIndice == 0 and endFlag:
             endPolyIndice = poly_indice
 
+
 # if start pos and end pos in the same polygon,return the path
 # if startPolyIndice == endPolyIndice:
 #     return [startPos,endPos]
 
-# construct path (pass polygon numbers)
-def constructPath(predecessors, start, goal):
-    path_polys = []
-    current_poly = goal
-    while (current_poly != start):
-        path_polys.insert(0, current_poly)
-        current_poly = predecessors[current_poly]
-    return path_polys
-
-
 # overloading the compare function of binaryheap
 def custom_compare(node1, node2):
-    if node1['f'] == node2['f']:
-        return True
-    else:
-        return node1['f'] < node2['f']
+    return node1['f'] - node2['f']
 
 
 # overloading the insert function of binaryheap
 def insert(self, value):
+    if not hasattr(self, 'value_index_map'):
+        self.value_index_map = {}
     self.heap.append(value)
     index = len(self.heap) - 1
     value['index'] = index
@@ -283,8 +267,9 @@ def findPassPolys(poly_neighbour, startPoly, endPoly):
     closeList = {}  # visited poly
     initNode = {
         'g': 0,
-        'h': 0,
         'f': 0,
+        # 'x': startPos[0],
+        # 'y': startPos[1],
         'polyIndice': startPoly
     }
     heap = MinBinaryHeap(compare_func=custom_compare, insert_func=insert)
@@ -312,7 +297,6 @@ def findPassPolys(poly_neighbour, startPoly, endPoly):
                     # get value G when arrive neighbour
                     neighbour_node = {
                         'g': g,
-                        'h': h,
                         'f': h + g,
                         'polyIndice': neighbour_poly_indice,
                         'father': nodePolyIndice,
@@ -333,14 +317,14 @@ def findPassPolys(poly_neighbour, startPoly, endPoly):
 path_poly = findPassPolys(poly_neighbour, startPolyIndice, endPolyIndice)
 
 # show the path of polys
-# for i in range(len(path_poly) - 1):
-#     center = center_of_polys[path_poly[i]]
-#     next_center = center_of_polys[path_poly[i + 1]]
-#     plt.plot(
-#         [center[0], next_center[0]],
-#         [center[1], next_center[1]],
-#         "--", c='green'
-#     )
+for i in range(len(path_poly) - 1):
+    center = center_of_polys[path_poly[i]]
+    next_center = center_of_polys[path_poly[i + 1]]
+    plt.plot(
+        [center[0], next_center[0]],
+        [center[1], next_center[1]],
+        "--", c='green'
+    )
 
 pass_diagnals = []
 for i in range(len(path_poly) - 1):
@@ -360,10 +344,10 @@ for i in range(len(path_poly) - 1):
         info['right'] = verts[diagPos[1]]
     pass_diagnals.append(info)
 
-#Treating the endpoint as an edge, with the same left and right vertices
+# Treating the endpoint as an edge, with the same left and right vertices
 pass_diagnals.append({
-    'left':endPos,
-    'right':endPos,
+    'left': endPos,
+    'right': endPos,
 })
 
 # Funnel Algorithm to find final path (todo )
@@ -378,8 +362,6 @@ passing_point.append(startPos)
 # check if the same point
 def checkIfTheSamePoint(posA, posB):
     return posA[0] == posB[0] and posA[1] == posB[1]
-
-
 
 
 lenPassDiagnals = len(pass_diagnals)
@@ -414,7 +396,7 @@ for i in range(lenPassDiagnals):
                                 leftFlag = True
             # right
             if not leftFlag and not checkIfTheSamePoint(rightPoint, lastRight):
-                if checkIfTheSamePoint(lastRight,apex):
+                if checkIfTheSamePoint(lastRight, apex):
                     lastRight = rightPoint
                 else:
                     if i == lenPassDiagnals - 1:
@@ -430,8 +412,11 @@ for i in range(lenPassDiagnals):
                                 passing_point.append(apex)
                                 rightFlag = True
 
-
 passing_point.append(endPos)
+
+print(startPos, endPos)
+print(path_poly)
+print(passing_point)
 # show the final path
 for i in range(len(passing_point) - 1):
     posA = passing_point[i]
@@ -441,6 +426,22 @@ for i in range(len(passing_point) - 1):
         [posA[1], next_posA[1]],
         "-", c='red'
     )
+
+# export need data as json file
+res = {
+    'poly_diag_map': poly_diag_map,
+    'verts': verts.tolist(),
+    'polys': polys,
+    'diagnals_all': diagsAll,
+    'poly_center': center_of_polys,
+    'center_distance_map': center_distance_map,
+    'poly_neighbour_diag': poly_neighbour,
+}
+
+jsondatar = json.dumps(res, ensure_ascii=False, indent=4)
+
+with open('data.json', 'w', encoding='utf-8') as f:
+    f.write(jsondatar)
 
 plt.grid()
 plt.title("Convexify with holes")

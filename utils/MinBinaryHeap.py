@@ -1,7 +1,6 @@
 class MinBinaryHeap:
     def __init__(self, compare_func=None, insert_func=None):
         self.heap = []
-        self.value_index_map = {}
         if compare_func is None:
             self.compare = lambda x, y: x - y
         else:
@@ -76,7 +75,7 @@ class MinBinaryHeap:
     def _swap(self, i, j):
         self.heap[i], self.heap[j] = self.heap[j], self.heap[i]
 
-# test
+#test
 # heap = MinBinaryHeap()
 # heap.insert(5)
 # heap.insert(10)
