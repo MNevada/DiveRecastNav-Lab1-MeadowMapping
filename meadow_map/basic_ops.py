@@ -45,7 +45,10 @@ def collinear(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> bool:
     """
     xy = y - x
     yz = z - y
-
+    # print("----")
+    # print(xy[0] * yz[1])
+    # print(xy[1] * yz[0])
+    # print("----")
     area = xy[0] * yz[1] - xy[1] * yz[0]
     # distance of z to line xy
     dist = area / (xy[0] * xy[0] + xy[1] * xy[1] + 1e-6)

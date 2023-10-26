@@ -25,93 +25,229 @@ def plot_poly(verts: np.ndarray, indices: np.ndarray, color="blue") -> None:
     x.append(verts[indices[0]][0])
     y.append(verts[indices[0]][1])
 
-    plt.plot(x, y, c=color)
+    plt.plot(x, y, c=color, linewidth=lineWidth)
 
-# The poly region that we want to divide into convex areas
-verts_poly = np.array(
-    [
-        [0., 0.], [0., 4.], [2., 4.],
-        [1., 3.], [2., 1.], [3., 3.], [4., 1.],
-        [1., 0.]
-    ]
-)
+
+lineWidth = 0.5
+
+# open json data
+with open('MapPoint.json', 'r') as file:
+    # 将JSON文件内容加载到一个变量中
+    mapPointData = json.load(file)
+# 输出JSON数据
+out_border_points_list = []
+inner_obstacle_points_list = []
+
+max_x_value_list = []
+for index, value in enumerate(mapPointData['points']):
+    if index == 0:
+        for item in value:
+            out_border_points_list.append([item['x']/100, item['y']/100])
+        # out_border_points_list.reverse()
+
+        # test
+        # value = [[550., 500.], [550., 1250.], [850., 1250.], [850., 1350.],
+        #          [350., 1350.], [350., 1800.], [1450., 1800.], [1450., 1350.],
+        #          [950., 1350.], [950., 1250.], [1250., 1250.], [1250., 500.]]
+        # for item in value:
+        #     out_border_points_list.append([item[0], item[1]])
+
+        # test
+        # value = [
+        #     [750., 1290.], [750., 1500.], [1200., 1500.], [1200., 1290.],
+        # ]
+        # for item in value:
+        #     out_border_points_list.append([item[0], item[1]])
+
+        # test
+        # value = [
+        #     [350., 1250.], [350., 1800.], [1300., 1800.], [1300., 1250.],
+        #     [850,1250],[850,1150],[1300,1150],[1300,1050],
+        #     [350,1050],[350,1150],[750,1150],[750,1250]
+        # ]
+        # for item in value:
+        #     out_border_points_list.append([item[0], item[1]])
+
+        # test
+        # value = [
+        #     [350., 1250.], [350., 1800.], [1300., 1800.], [1300., 1250.],
+        #     [850, 1250], [850, 1150], [1300, 1150], [1300, 1050],
+        #     [350, 1050], [350, 1150], [750, 1150], [750, 1250]
+        # ]
+        # for item in value:
+        #     out_border_points_list.append([item[0], item[1]])
+
+        # test111111111111
+        # value = [
+        #     [350., 1250.], [350., 1800.], [1300., 1800.], [1300., 1250.],
+        # ]
+        # for item in value:
+        #     out_border_points_list.append([item[0], item[1]])
+
+    else:
+        if index <= 0:
+            inner_obstacle_point = []
+            # 找到最大值x坐标
+            max_x_value = None
+            for item in value:
+                inner_obstacle_point.append([item['x'] / 100, item['y'] / 100])
+                if max_x_value is None:
+                    max_x_value = item['x'] / 100
+                else:
+                    if item['x'] / 100 > max_x_value:
+                        max_x_value = item['x'] / 100
+            max_x_value_list.append(max_x_value)
+            # if index == 13 :
+            # inner_obstacle_point.reverse()
+            inner_obstacle_points_list.append(np.array(inner_obstacle_point))
+
+
+
+        # test1
+        # if index != 13:
+        #     if index == 7:
+        #         inner_obstacle_point = []
+        #         for item in value:
+        #             inner_obstacle_point.append([item['x'] / 100, item['y'] / 100])
+        #             # inner_obstacle_point.reverse()
+        #         inner_obstacle_points_list.append(np.array(inner_obstacle_point))
+
+        # test2
+        # if index != 13:
+        #     if index == 7 or index == 1:
+        #         # if index == 1:
+        #         #     value = [
+        #         #         {"x": 97195, "y": 143980}, {"x": 95992, "y": 144004}, {"x": 95984, "y": 145982},
+        #         #         {"x": 94805, "y": 146014},
+        #         #         {"x": 94785, "y": 148029}, {"x": 97166, "y": 148004}, {"x": 97186, "y": 146006},
+        #         #         {"x": 98377, "y": 145969},
+        #         #         {"x": 98441, "y": 143999}, {"x": 99574, "y": 144016}, {"x": 99636, "y": 141995},
+        #         #         {"x": 100796, "y": 142016},
+        #         #         {"x": 100806, "y": 139985}, {"x": 98411, "y": 139993}, {"x": 98411, "y": 141978},
+        #         #         {"x": 97203, "y": 141992}
+        #         #     ]
+        #         # if index == 7:
+        #         #     value = [
+        #         #         {"x": 103179, "y": 146006}, {"x": 102002, "y": 146000}, {"x": 102002, "y": 148031},
+        #         #         {"x": 103155, "y": 148037},
+        #         #         {"x": 103197, "y": 150015}, {"x": 104350, "y": 150045}, {"x": 104380, "y": 151986},
+        #         #         {"x": 103185, "y": 152034},
+        #         #         {"x": 103197, "y": 154006}, {"x": 101973, "y": 154024}, {"x": 101978, "y": 156037},
+        #         #         {"x": 103149, "y": 156037},
+        #         #         {"x": 103191, "y": 157991}, {"x": 105605, "y": 157967}, {"x": 105605, "y": 156031},
+        #         #         {"x": 104386, "y": 155983},
+        #         #         {"x": 104416, "y": 153982}, {"x": 105599, "y": 153994}, {"x": 105605, "y": 152017},
+        #         #         {"x": 106806, "y": 151975},
+        #         #         {"x": 106752, "y": 150033}, {"x": 105593, "y": 149973}, {"x": 105606, "y": 148027},
+        #         #         {"x": 104382, "y": 147998},
+        #         #         {"x": 104376, "y": 146008}, {"x": 108038, "y": 145990}, {"x": 108002, "y": 143994},
+        #         #         {"x": 103169, "y": 144012}
+        #         #     ]
+        #
+        #         #test
+        #         if index == 1:
+        #             value = [
+        #
+        #                 {"x": 100796, "y": 142016},
+        #                 {"x": 100806, "y": 139985}, {"x": 98411, "y": 139993}, {"x": 98411, "y": 141978},
+        #
+        #             ]
+        #         if index == 7:
+        #             value = [
+        #                         {"x": 103179, "y": 146006}, {"x": 108038, "y": 145990}, {"x": 108002, "y": 143994},
+        #                         {"x": 103169, "y": 144012}
+        #                     ]
+        #         inner_obstacle_point = []
+        #         for item in value:
+        #             inner_obstacle_point.append([item['x'] / 100, item['y'] / 100])
+        #             # inner_obstacle_point.reverse()
+        #         inner_obstacle_points_list.append(np.array(inner_obstacle_point))
+
+        # test11111111111111111
+        # if index != 13:
+        #     # if index == 2 or index == 10:
+        #         inner_obstacle_point = []
+        #         # 找到最大值x坐标
+        #         max_x_value = None
+        #         for item in value:
+        #             inner_obstacle_point.append([item['x'] / 100, item['y'] / 100])
+        #             if max_x_value is None:
+        #                 max_x_value = item['x'] / 100
+        #             else:
+        #                 if item['x'] / 100 > max_x_value:
+        #                     max_x_value = item['x'] / 100
+        #         max_x_value_list.append(max_x_value)
+        #             # inner_obstacle_point.reverse()
+        #         inner_obstacle_points_list.append(np.array(inner_obstacle_point))
+
+max_x_value_list_index = [i for i in range(len(inner_obstacle_points_list))]
+
+def compare_index(index):
+    return max_x_value_list[index]
+
+max_x_value_list_index.sort(key=compare_index)
+
+# out lines
+verts_poly = np.array(out_border_points_list)
 indices_poly = [verts_poly.shape[0] - i - 1 for i in range(verts_poly.shape[0])]  # CCW
+# show lines
+plot_poly(verts_poly, indices_poly, [0, 0, 1.0])
+plt.scatter(verts_poly[0][0], verts_poly[0][1])
 
-verts_hole = np.array(
-    [
-        [0.5, 0.5], [0.2, 1.5], [0.4, 2.],
-        [1.8, 0.5], [1., 1.]
-    ]
-)
+# aa = inner_obstacle_points_list[0]
+# aa_indice = [(i + 2) % aa.shape[0] for i in range(aa.shape[0])]
+# #start merge all lines
+# verts, indices, _mergeLineSeg = meadow_map.merge_hole(verts_poly, indices_poly, aa, aa_indice)
 
-verts_hole1 = np.array(
-    [
-        [2.5, 1.], [3., 2], [3., 1.5], [3.5, 1]
-        # [0.2, 2.5], [0.3, 3.], [0.8, 3.], [0.7, 2.5]
-        # [2.7, 1.5], [2.8, 2.], [3.3, 2.], [3.2, 1.5]
-    ]
-)
-
-# verts_hole2 = np.array(
-#     [
-#         [0.2, 2.5], [0.3, 3.], [0.8, 3.], [0.7, 2.5]
-#     ]
-# )
-
-indices_hole = [(i + 2) % verts_hole.shape[0] for i in range(verts_hole.shape[0])]  # CW
-indices_hole1 = [(i + 2) % verts_hole1.shape[0] for i in range(verts_hole1.shape[0])]  # CW
-# indices_hole2 = [(i + 2) % verts_hole2.shape[0] for i in range(verts_hole2.shape[0])]  # CW
-
-verts, indices, mergeLineSeg1 = meadow_map.merge_hole(verts_poly, indices_poly, verts_hole, indices_hole)
-
-verts, indices, mergeLineSeg2 = meadow_map.merge_hole(verts, indices, verts_hole1, indices_hole1)
-# verts, indices, mergeLineSeg3 = meadow_map.merge_hole(verts, indices, verts_hole2, indices_hole2)
+verts = verts_poly
+indices = indices_poly
+diagsAll = []
+mergeLineSeg = []
+count = 1
+for i in max_x_value_list_index:
+    verts_hole = inner_obstacle_points_list[i]
+    plt.scatter(verts_hole[0][0], verts_hole[0][1], linewidth=lineWidth)
+    # plt.text(verts_hole[0][0], verts_hole[0][1], count, color="red")
+    count += 1
+    indices_hole = [(i + 2) % verts_hole.shape[0] for i in range(verts_hole.shape[0])]
+    # show inner obstacle
+    plot_poly(verts_hole, indices_hole, [0.0, 0.0, 0.0])
+    # mergeLine
+    verts, indices, _mergeLineSeg = meadow_map.merge_hole(verts, indices, verts_hole, indices_hole,inner_obstacle_points_list,i)
+    if _mergeLineSeg is not None:
+        mergeLineSeg.append(_mergeLineSeg)
+        diagsAll.append([_mergeLineSeg[0], _mergeLineSeg[1]])
 
 polys, diags = meadow_map.convexify(verts, indices)
 
+# plot mergeline
+for item in mergeLineSeg:
+    plt.plot(
+        [verts[item[0]][0], verts[item[1]][0]],
+        [verts[item[0]][1], verts[item[1]][1]],
+        "--", c=[0.9, 0.4, 0.8],
+        linewidth=lineWidth
+    )
+
 # plot all diags. with dotted line
-diagsAll = [[mergeLineSeg1[0], mergeLineSeg1[1]]]
 for d in diags:
     posA = verts[indices[d[0]]]
     posB = verts[indices[d[1]]]
     diagsAll.append([indices[d[0]], indices[d[1]]])
-    plt.plot([posA[0], posB[0]], [posA[1], posB[1]], "--", c=[0.4, 0.4, 0.8])
+    plt.plot([posA[0], posB[0]], [posA[1], posB[1]], "--", c=[0.4, 0.4, 0.8], linewidth=lineWidth)
 
 # indices for result convexy_polys
 indices_res_polys = [i for i in range(len(polys))]
 # indices for diagnals
 indices_res_diags = [i for i in range(len(diagsAll))]
 
+# 再对角线中心展示下标号
 for diag_indice in indices_res_diags:
     _diag = diagsAll[diag_indice]
     posA = verts[_diag[0]]
     posB = verts[_diag[1]]
-    plt.text((posA[0] + posB[0]) / 2, (posA[1] + posB[1]) / 2, diag_indice, color="red")
+    # plt.text((posA[0] + posB[0]) / 2, (posA[1] + posB[1]) / 2, diag_indice, color="red")
 
-# plot the result
-plot_poly(verts_poly, indices_poly, [0, 0, 1.0])
-plot_poly(verts_hole, indices_hole, [0.0, 0.0, 0.0])
-plot_poly(verts_hole1, indices_hole1, [0.0, 0.0, 0.0])
-# plot_poly(verts_hole2, indices_hole2, [0.0, 0.0, 0.0])
-
-# plot the line segment that merge the hole
-plt.plot(
-    [verts[mergeLineSeg1[0]][0], verts[mergeLineSeg1[1]][0]],
-    [verts[mergeLineSeg1[0]][1], verts[mergeLineSeg1[1]][1]],
-    "--", c=[0.9, 0.4, 0.8]
-)
-
-# plt.plot(
-#     [verts[mergeLineSeg2[0]][0], verts[mergeLineSeg2[1]][0]],
-#     [verts[mergeLineSeg2[0]][1], verts[mergeLineSeg2[1]][1]],
-#     "--", c=[0.9, 0.4, 0.8]
-# )
-
-# plt.plot(
-#     [verts[mergeLineSeg3[0]][0], verts[mergeLineSeg3[1]][0]],
-#     [verts[mergeLineSeg3[0]][1], verts[mergeLineSeg3[1]][1]],
-#     "--", c=[0.9, 0.4, 0.8]
-# )
 
 # get the center pos of poly
 def getCenterPos(verts, verts_indices):
@@ -130,38 +266,38 @@ center_of_polys = {}
 for i in range(len(polys)):
     centerPos = getCenterPos(verts, polys[i])
     center_of_polys[i] = centerPos
-    plt.text(centerPos[0], centerPos[1], i, color="black")
-
+    # plt.text(centerPos[0], centerPos[1], i, color="black")
 
 
 def doAfterConvexifyAndSearch():
     # search the path
+
     # example 1
-    # startPos = [1., 3.5]
-    # endPos = [0.5, 3.0]
+    startPos = [100, 100]
+    # endPos = [1200., 1740]
 
     # example 2
-    startPos = [1, 3.5]
-    endPos = [3.6, 1.2]
+    # startPos = [1000, 1500]
+    # startPos = [1000, 1370]
+    # endPos = [1100., 1360.]
 
     # example 3
-    # startPos = [0.1, 1.5]
-    # endPos = [3.5, 1.2]
+    # startPos = [1000, 1500]
+    # startPos = [800, 1370.]
+    # endPos = [1090., 1475.]
+    # endPos = [1150., 1750.]
 
     # example 4
-    # startPos = [0.1, 1.5]
-    # endPos = [1, 3.5]
-
-    # example 5
-    # startPos = [0.1, 1.5]
-    # endPos = [1, 3.]
-
-    # example 6
-    # startPos = [1, 3.5]
-    # endPos = [1.7, 0.4]
+    # startPos = [853, 1362]
+    # startPos = [800, 1580]
+    endPos = [1150., 1750.]
 
     plt.scatter(startPos[0], startPos[1])
     plt.scatter(endPos[0], endPos[1])
+
+    # plt.plot([startPos[0], endPos[0]], [startPos[1], endPos[1]], "--", c=[0.4, 0.4, 0.8], linewidth=lineWidth)
+
+    # plt.show()
 
     def generateLineNum(origin, target):
         return str(origin) + "_" + str(target)
@@ -321,7 +457,7 @@ def doAfterConvexifyAndSearch():
                         neighbour_node = heap.value_index_map[neighbour_poly_indice]
                         ng = neighbour_node['g']
                         if ng > g:
-                            neighbour_node['father'] = node
+                            neighbour_node['father'] = node['polyIndice']
                             neighbour_node['g'] = g
                             neighbour_node['f'] = h + g
                             # fix heap
@@ -337,7 +473,8 @@ def doAfterConvexifyAndSearch():
         plt.plot(
             [center[0], next_center[0]],
             [center[1], next_center[1]],
-            "--", c='green'
+            "--", c='green',
+            linewidth=lineWidth
         )
 
     pass_diagnals = []
@@ -369,6 +506,8 @@ def doAfterConvexifyAndSearch():
     # define the left and right boundry of funnel
     firstDiagInfo = pass_diagnals[0]
     lastLeft, lastRight = firstDiagInfo['left'], firstDiagInfo['right']
+    lastLeftIndex = 0
+    lastRightIndex = 0
     passing_point = []
     passing_point.append(startPos)
 
@@ -377,52 +516,60 @@ def doAfterConvexifyAndSearch():
         return posA[0] == posB[0] and posA[1] == posB[1]
 
     lenPassDiagnals = len(pass_diagnals)
-    for i in range(lenPassDiagnals):
-        if i > 0:
-            diag_info = pass_diagnals[i]
-            leftPoint = diag_info['left']
-            rightPoint = diag_info['right']
+    i = 1
+    while i < lenPassDiagnals:
+        diag_info = pass_diagnals[i]
+        leftPoint = diag_info['left']
+        rightPoint = diag_info['right']
 
-            leftFlag = True
-            rightFlag = True
+        if not checkIfTheSamePoint(leftPoint, lastLeft):
+            if checkIfTheSamePoint(lastLeft, apex):
+                lastLeft = leftPoint
+                lastLeftIndex = i
+            else:
+                if i >= lenPassDiagnals - 1:
+                    if not left_on(apex, lastRight, leftPoint):
+                        apex = lastRight
+                        passing_point.append(apex)
+                else:
+                    if not left(apex, lastLeft, leftPoint):
+                        if left_on(apex, lastRight, leftPoint):
+                            lastLeft = leftPoint
+                            lastLeftIndex = i
+                        else:
+                            apex = lastRight
+                            passing_point.append(apex)
+                            i = lastRightIndex + 1
+                            _digInfo = pass_diagnals[i]
+                            lastLeft, lastRight = _digInfo['left'], _digInfo['right']
+                            lastLeftIndex = i
+                            lastRightIndex = i
 
-            while leftFlag or rightFlag:
-                # left
-                leftFlag = False
-                rightFlag = False
-                if not checkIfTheSamePoint(leftPoint, lastLeft):
-                    if checkIfTheSamePoint(lastLeft, apex):
-                        lastLeft = leftPoint
-                    else:
-                        if i == lenPassDiagnals - 1:
-                            if not left_on(apex, lastRight, leftPoint):
-                                apex = lastRight
-                                passing_point.append(apex)
+        # right
+        if not checkIfTheSamePoint(rightPoint, lastRight):
+            if checkIfTheSamePoint(lastRight, apex):
+                lastRight = rightPoint
+                lastRightIndex = i
+            else:
+                if i >= lenPassDiagnals - 1:
+                    if left(apex, lastLeft, rightPoint):
+                        apex = lastLeft
+                        passing_point.append(apex)
+                else:
+                    if left_on(apex, lastRight, rightPoint):
+                        if not left(apex, lastLeft, rightPoint):
+                            lastRight = rightPoint
+                            lastRightIndex = i
                         else:
-                            if not left(apex, lastLeft, leftPoint):
-                                if left_on(apex, lastRight, leftPoint):
-                                    lastLeft = leftPoint
-                                else:
-                                    apex = lastRight
-                                    passing_point.append(apex)
-                                    leftFlag = True
-                # right
-                if not leftFlag and not checkIfTheSamePoint(rightPoint, lastRight):
-                    if checkIfTheSamePoint(lastRight, apex):
-                        lastRight = rightPoint
-                    else:
-                        if i == lenPassDiagnals - 1:
-                            if left(apex, lastLeft, rightPoint):
-                                apex = lastLeft
-                                passing_point.append(apex)
-                        else:
-                            if left_on(apex, lastRight, rightPoint):
-                                if not left(apex, lastLeft, rightPoint):
-                                    lastRight = rightPoint
-                                else:
-                                    apex = lastLeft
-                                    passing_point.append(apex)
-                                    rightFlag = True
+                            apex = lastLeft
+                            passing_point.append(apex)
+                            i = lastLeftIndex + 1
+                            _digInfo = pass_diagnals[i]
+                            lastLeft, lastRight = _digInfo['left'], _digInfo['right']
+                            lastLeftIndex = i
+                            lastRightIndex = i
+
+        i += 1
 
     passing_point.append(endPos)
 
@@ -436,7 +583,8 @@ def doAfterConvexifyAndSearch():
         plt.plot(
             [posA[0], next_posA[0]],
             [posA[1], next_posA[1]],
-            "-", c='red'
+            "-", c='red',
+            linewidth=lineWidth
         )
 
     # export need data as json file
@@ -455,7 +603,8 @@ def doAfterConvexifyAndSearch():
     with open('data.json', 'w', encoding='utf-8') as f:
         f.write(jsondatar)
 
-doAfterConvexifyAndSearch()
+
+# doAfterConvexifyAndSearch()
 
 plt.grid()
 plt.title("Convexify with holes")
